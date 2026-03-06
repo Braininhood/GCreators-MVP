@@ -30,6 +30,7 @@ const AvatarChat = () => {
   };
 
   const fetchAvatar = async () => {
+    if (!avatarId) return;
     setLoading(true);
     const { data, error } = await supabase
       .from('mentor_avatars')
@@ -73,34 +74,39 @@ const AvatarChat = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen flex flex-col bg-background overflow-hidden">
       <Navbar />
-      <div className="container mx-auto px-4 py-32">
-        <Button
-          variant="ghost"
-          onClick={() => navigate(`/mentors/${avatar.mentor_id}`)}
-          className="mb-6"
-        >
-          <ArrowLeft size={20} className="mr-2" />
-          Back to {avatar.mentor_profiles?.name}'s Profile
-        </Button>
+      <main className="flex-1 min-h-0 overflow-hidden flex flex-col">
+        <div className="container mx-auto px-4 py-6 flex-1 flex flex-col min-h-0 overflow-hidden">
+          <Button
+            variant="ghost"
+            onClick={() => navigate(`/mentors/${avatar.mentor_id}`)}
+            className="mb-4 shrink-0"
+          >
+            <ArrowLeft size={20} className="mr-2" />
+            Back to {avatar.mentor_profiles?.name}'s Profile
+          </Button>
 
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-6">
-            <h1 className="text-4xl font-bold mb-2">
-              Chat with {avatar.avatar_name}
-            </h1>
-            <p className="text-muted-foreground">
-              AI-powered assistant by {avatar.mentor_profiles?.name}
-            </p>
+          <div className="max-w-4xl mx-auto flex-1 flex flex-col min-h-0 overflow-hidden w-full">
+            <div className="mb-4 shrink-0">
+              <h1 className="text-2xl md:text-3xl font-bold mb-1">
+                Chat with {avatar.avatar_name}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                AI-powered assistant by {avatar.mentor_profiles?.name}
+              </p>
+            </div>
+
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <AvatarChatInterface
+                avatarId={avatarId!}
+                mentorId={avatar.mentor_id}
+                fillContainer
+              />
+            </div>
           </div>
-
-          <AvatarChatInterface 
-            avatarId={avatarId!} 
-            mentorId={avatar.mentor_id}
-          />
         </div>
-      </div>
+      </main>
       <Footer />
     </div>
   );

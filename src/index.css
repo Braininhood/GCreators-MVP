@@ -122,4 +122,23 @@ All colors MUST be HSL.
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
   }
+
+  /* Professional scrollbar for chat and scrollable cards */
+  .scrollbar-chat {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+  }
+  .scrollbar-chat::-webkit-scrollbar {
+    width: 8px;
+  }
+  .scrollbar-chat::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-chat::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.25);
+    border-radius: 4px;
+  }
+  .scrollbar-chat::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.4);
+  }
 }

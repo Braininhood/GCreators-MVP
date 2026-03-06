@@ -4,10 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Send, Bot, User, Loader2, Calendar, Video, BookOpen, Lock } from "lucide-react";
+import { Send, Bot, User, Loader2, Calendar, Video, BookOpen, Lock, Volume2, Square, Type } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { cn } from "@/lib/utils";
 
 interface Message {
   id: string;
@@ -23,9 +31,11 @@ interface AvatarChatInterfaceProps {
   mentorName?: string;
   avatarName?: string;
   onBookingClick?: () => void;
+  /** When true, card fills parent height (for page layout with internal scroll only) */
+  fillContainer?: boolean;
 }
 
-export const AvatarChatInterface = ({ avatarId, mentorId, mentorName, onBookingClick }: AvatarChatInterfaceProps) => {
+export const AvatarChatInterface = ({ avatarId, mentorId, mentorName, onBookingClick, fillContainer }: AvatarChatInterfaceProps) => {
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -36,8 +46,53 @@ export const AvatarChatInterface = ({ avatarId, mentorId, mentorName, onBookingC
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
+  const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
+  const [responseMode, setResponseMode] = useState<"text" | "voice" | "both">("both");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const hasInitiallyScrolled = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const hasSetInitialVoice = useRef(false);
+  // Web Speech API: load voices (may be async in Chrome)
+  useEffect(() => {
+    const loadVoices = () => {
+      const list = window.speechSynthesis.getVoices();
+      setVoices(list);
+      if (list.length > 0 && !hasSetInitialVoice.current) {
+        hasSetInitialVoice.current = true;
+        const defaultVoice = list.find((v) => v.default) || list.find((v) => v.lang.startsWith("en")) || list[0];
+        setSelectedVoice(defaultVoice);
+      }
+    };
+    loadVoices();
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+    return () => {
+      window.speechSynthesis.cancel();
+    };
+  }, []);
+
+  const speak = (text: string, messageId: string) => {
+    if (!text.trim() || !("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.95;
+    utterance.pitch = 1;
+    if (selectedVoice) utterance.voice = selectedVoice;
+    utterance.onend = () => setSpeakingMessageId(null);
+    utterance.onerror = () => setSpeakingMessageId(null);
+    setSpeakingMessageId(messageId);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const stopSpeaking = () => {
+    window.speechSynthesis.cancel();
+    setSpeakingMessageId(null);
+  };
 
   useEffect(() => {
     checkAuthAndRole();
@@ -69,7 +124,16 @@ export const AvatarChatInterface = ({ avatarId, mentorId, mentorName, onBookingC
   }, [messages]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const container = messagesContainerRef.current;
+    if (!container || !messagesEndRef.current) return;
+    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 120;
+    // Scroll on first load with messages, or when user is already near bottom
+    if (!hasInitiallyScrolled.current && messages.length > 0) {
+      hasInitiallyScrolled.current = true;
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    } else if (isNearBottom) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   const fetchAvatarData = async () => {
@@ -141,6 +205,9 @@ export const AvatarChatInterface = ({ avatarId, mentorId, mentorName, onBookingC
 
     if (data) {
       setMessages([{ id: data.id, role: "assistant", content: data.content, created_at: data.created_at }]);
+      if (responseMode === "voice" && data.content && "speechSynthesis" in window) {
+        setTimeout(() => speak(data.content, data.id), 100);
+      }
     }
   };
 
@@ -228,11 +295,16 @@ export const AvatarChatInterface = ({ avatarId, mentorId, mentorName, onBookingC
               );
             } else if (parsed.type === "done") {
               // Mark streaming complete
-              setMessages((prev) =>
-                prev.map((m) =>
+              setMessages((prev) => {
+                const updated = prev.map((m) =>
                   m.id === tempAssistantId ? { ...m, streaming: false } : m
-                )
-              );
+                );
+                const msg = updated.find((m) => m.id === tempAssistantId);
+                if (msg?.content && responseMode === "voice") {
+                  setTimeout(() => speak(msg.content, tempAssistantId), 50);
+                }
+                return updated;
+              });
               // Reload messages from DB to get real IDs
               if (streamedConvId) {
                 setTimeout(() => loadMessages(streamedConvId!), 300);
@@ -301,7 +373,7 @@ export const AvatarChatInterface = ({ avatarId, mentorId, mentorName, onBookingC
   }
 
   return (
-    <Card className="flex flex-col h-[600px]">
+    <Card className={cn("flex flex-col", fillContainer ? "h-full min-h-[400px]" : "h-[600px]")}>
       <CardHeader className="border-b py-3 px-4">
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10">
@@ -316,10 +388,65 @@ export const AvatarChatInterface = ({ avatarId, mentorId, mentorName, onBookingC
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
             Online
           </Badge>
+          <ToggleGroup
+            type="single"
+            value={responseMode}
+            onValueChange={(v) => v && setResponseMode(v as "text" | "voice" | "both")}
+            className="shrink-0 gap-0"
+          >
+            <ToggleGroupItem value="text" size="sm" className="text-xs px-2 h-7" title="Text only">
+              <Type size={12} />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="voice" size="sm" className="text-xs px-2 h-7" title="Voice (auto-play)">
+              <Volume2 size={12} />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="both" size="sm" className="text-xs px-2 h-7" title="Text and voice">
+              <Type size={12} className="mr-0.5" />
+              <Volume2 size={12} />
+            </ToggleGroupItem>
+          </ToggleGroup>
+          {voices.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" title="Voice settings">
+                  <Volume2 size={16} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="max-h-[300px] overflow-y-auto w-56">
+                {(voices.filter((v) => v.lang.startsWith("en")).length > 0
+                  ? voices.filter((v) => v.lang.startsWith("en"))
+                  : voices.slice(0, 12)
+                ).map((v) => (
+                  <DropdownMenuItem
+                    key={v.name + v.lang}
+                    onClick={() => setSelectedVoice(v)}
+                    className={selectedVoice?.name === v.name ? "bg-accent" : ""}
+                  >
+                    {v.name} ({v.lang})
+                  </DropdownMenuItem>
+                ))}
+                {voices.filter((v) => v.lang.startsWith("en")).length > 0 &&
+                  voices.filter((v) => !v.lang.startsWith("en")).length > 0 && (
+                  <>
+                    <div className="px-2 py-1.5 text-xs text-muted-foreground border-t mt-1 pt-1">Other languages</div>
+                    {voices.filter((v) => !v.lang.startsWith("en")).slice(0, 8).map((v) => (
+                      <DropdownMenuItem
+                        key={v.name + v.lang}
+                        onClick={() => setSelectedVoice(v)}
+                        className={selectedVoice?.name === v.name ? "bg-accent" : ""}
+                      >
+                        {v.name} ({v.lang})
+                      </DropdownMenuItem>
+                    ))}
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </CardHeader>
 
-      <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
+      <CardContent ref={messagesContainerRef} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 space-y-4 scrollbar-chat">
         {messages.map((message, index) => (
           <div
             key={message.id || index}
@@ -342,18 +469,41 @@ export const AvatarChatInterface = ({ avatarId, mentorId, mentorName, onBookingC
                   : "bg-muted rounded-tl-sm"
               }`}
             >
-              {message.content ? (
-                <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
-              ) : (
-                <span className="flex gap-1 items-center py-0.5">
-                  <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce [animation-delay:0ms]" />
-                  <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce [animation-delay:150ms]" />
-                  <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce [animation-delay:300ms]" />
-                </span>
-              )}
-              {message.streaming && message.content && (
-                <span className="inline-block w-0.5 h-3.5 bg-current ml-0.5 animate-pulse align-middle" />
-              )}
+              <div className="flex items-start gap-2">
+                <div className="flex-1 min-w-0">
+                  {message.content ? (
+                    <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                  ) : (
+                    <span className="flex gap-1 items-center py-0.5">
+                      <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce [animation-delay:0ms]" />
+                      <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce [animation-delay:150ms]" />
+                      <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce [animation-delay:300ms]" />
+                    </span>
+                  )}
+                  {message.streaming && message.content && (
+                    <span className="inline-block w-0.5 h-3.5 bg-current ml-0.5 animate-pulse align-middle" />
+                  )}
+                </div>
+                {message.role === "assistant" && message.content && !message.streaming && "speechSynthesis" in window && (responseMode === "voice" || responseMode === "both") && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
+                    onClick={() =>
+                      speakingMessageId === (message.id || String(index))
+                        ? stopSpeaking()
+                        : speak(message.content, message.id || String(index))
+                    }
+                    title={speakingMessageId === (message.id || String(index)) ? "Stop" : "Listen"}
+                  >
+                    {speakingMessageId === (message.id || String(index)) ? (
+                      <Square size={14} fill="currentColor" />
+                    ) : (
+                      <Volume2 size={14} />
+                    )}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         ))}
