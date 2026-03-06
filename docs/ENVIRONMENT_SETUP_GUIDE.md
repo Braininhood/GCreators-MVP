@@ -40,11 +40,11 @@ This document explains what information you need to collect from users/admins to
    Where to find: Supabase Dashboard → Settings → API → Project URL
 
 2. Supabase Anon Key (public)
-   Example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+   Example: your_anon_key_from_supabase_dashboard
    Where to find: Supabase Dashboard → Settings → API → Project API keys → anon/public
 
 3. Supabase Service Role Key (secret)
-   Example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+   Example: your_service_role_key_from_supabase_dashboard
    Where to find: Supabase Dashboard → Settings → API → Project API keys → service_role
    ⚠️ WARNING: Keep this secret! Server-side only!
 ```

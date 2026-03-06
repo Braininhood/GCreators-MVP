@@ -234,7 +234,7 @@ git push -u origin main
    - Add all your `VITE_*` variables:
      ```
      VITE_SUPABASE_URL=https://zdairdvgiifsymgmoswf.supabase.co
-     VITE_SUPABASE_PUBLISHABLE_KEY=eyJ...
+     VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_key
      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_...
      ```
    - ⚠️ **IMPORTANT:** Only add `VITE_*` and `NEXT_PUBLIC_*` variables (client-side only)
@@ -487,7 +487,7 @@ Go to Amplify Console → Environment Variables:
 
 ```env
 VITE_SUPABASE_URL=https://zdairdvgiifsymgmoswf.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=eyJ...
+VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_key
 NEXT_PUBLIC_APP_URL=https://gcreators.me
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_...
 NODE_ENV=production

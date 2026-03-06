@@ -15,8 +15,8 @@ dist
 dist-ssr
 *.local
 
-# Documentation (uncomment to exclude from repo)
-# docs/
+# Documentation (local reference only)
+docs/
 
 # Testing
 tests/
@@ -28,6 +28,7 @@ screenshots-archive/
 .env.local
 .env.*.local
 auth-cookies.json
+Untitled
 
 # Local storage backup (upload to Supabase separately)
 storage-backup/

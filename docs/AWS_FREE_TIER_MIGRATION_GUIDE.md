@@ -426,7 +426,7 @@ Create one Lambda per Supabase function, wire to API Gateway, and update the fro
 ```env
 # Keep Supabase (unchanged)
 VITE_SUPABASE_URL=https://xxx.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=eyJ...
+VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_key
 VITE_STRIPE_PUBLISHABLE_KEY=pk_...
 NEXT_PUBLIC_APP_URL=https://your-cloudfront-url.cloudfront.net
 ```
