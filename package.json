@@ -10,7 +10,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "upload-storage": "node scripts/upload-storage-backup.cjs",
-    "deploy:admin-delete-user": "supabase functions deploy admin-delete-user --no-verify-jwt"
+    "deploy:admin-delete-user": "supabase functions deploy admin-delete-user --no-verify-jwt",
+    "deploy:cancel-booking": "supabase functions deploy cancel-booking --no-verify-jwt",
+    "deploy:update-booking-status": "supabase functions deploy update-booking-status --no-verify-jwt"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

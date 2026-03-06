@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bot, Sparkles, Eye, RefreshCw, MessageSquare, Users, Zap, BookOpen } from "lucide-react";
 import { AvatarCreationWizard } from "./AvatarCreationWizard";
-import { AvatarChatInterface } from "./AvatarChatInterface";
 import { KnowledgeBaseManager } from "./KnowledgeBaseManager";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -139,7 +138,16 @@ export const AvatarManagementTab = ({ mentorId }: AvatarManagementTabProps) => {
         <Button variant="outline" onClick={() => setShowPreview(false)} className="mb-4">
           ← Back to Dashboard
         </Button>
-        <AvatarChatInterface avatarId={avatar.id} mentorId={mentorId} />
+        <Card className="flex flex-col h-[300px] items-center justify-center text-center p-8">
+          <Bot className="h-12 w-12 text-muted-foreground mb-4" />
+          <h3 className="font-semibold text-lg mb-2">Avatar chat is for learners</h3>
+          <p className="text-sm text-muted-foreground mb-4 max-w-md">
+            As a mentor, you can view and manage this avatar from your dashboard. Learners chat with your avatar from your mentor profile.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Use the Analytics and Knowledge Base tabs above to manage your avatar.
+          </p>
+        </Card>
       </div>
     );
   }
@@ -216,9 +224,10 @@ export const AvatarManagementTab = ({ mentorId }: AvatarManagementTabProps) => {
                 size="sm"
                 onClick={() => setShowPreview(true)}
                 disabled={avatar.status !== "ready"}
+                title="Avatar chat is for learners"
               >
                 <Eye size={16} className="mr-2" />
-                Test Chat
+                Learner View
               </Button>
               <Button
                 variant="outline"

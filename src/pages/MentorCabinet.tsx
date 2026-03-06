@@ -255,12 +255,12 @@ const MentorCabinet = () => {
     }
   };
 
-  const upcomingBookings = bookings.filter(b => 
-    new Date(b.booking_date) >= new Date() && b.status !== "cancelled"
+  const upcomingBookings = bookings.filter(b =>
+    new Date(b.booking_date) >= new Date() && ["pending", "confirmed"].includes(b.status)
   );
-  
-  const pastBookings = bookings.filter(b => 
-    new Date(b.booking_date) < new Date() || b.status === "cancelled"
+
+  const pastBookings = bookings.filter(b =>
+    new Date(b.booking_date) < new Date() || ["cancelled", "completed", "failed", "refunded"].includes(b.status)
   );
 
   // Calculate net earnings from transactions table (after fees)
@@ -529,6 +529,10 @@ const MentorCabinet = () => {
                   open={!!editingSession}
                   onOpenChange={(open) => !open && setEditingSession(null)}
                   onSaved={() => {
+                    setEditingSession(null);
+                    checkAuth();
+                  }}
+                  onMarkCompleted={() => {
                     setEditingSession(null);
                     checkAuth();
                   }}

@@ -90,7 +90,7 @@ export const ConversationsList = ({ userId }: { userId: string }) => {
     const mentorProfileId = mentorProfile?.id;
     setCurrentMentorProfile(mentorProfileId ? { id: mentorProfileId, name: mentorProfile?.name || "Mentor" } : null);
 
-    logger.info("fetchConversations", { userId, mentorProfileId, hasMentorProfile: !!mentorProfileId, isUserAdmin });
+    logger.debug("fetchConversations", { userId, mentorProfileId, hasMentorProfile: !!mentorProfileId, isUserAdmin });
 
     // Build the filter: user_id matches OR mentor_id matches (for mentors)
     let query = supabase
@@ -130,7 +130,7 @@ export const ConversationsList = ({ userId }: { userId: string }) => {
       return;
     }
 
-    logger.info("fetchConversations result", { count: conversationsData?.length, conversations: conversationsData });
+    logger.debug("fetchConversations result", { count: conversationsData?.length });
 
     // Fetch deleted conversations for current user (soft delete) with deleted_at
     const { data: deletedConvs } = await supabase
@@ -260,12 +260,12 @@ export const ConversationsList = ({ userId }: { userId: string }) => {
     try {
       const { data: rpcRows, error: rpcError } = await supabase.rpc("get_support_mentor_profile");
       
-      logger.info("ensureAdminMentorLoaded RPC result", { rpcRows, rpcError, rowCount: rpcRows?.length });
+      logger.debug("ensureAdminMentorLoaded RPC result", { rpcRows, rpcError, rowCount: rpcRows?.length });
 
       if (!rpcError && rpcRows && rpcRows.length > 0) {
         const row = rpcRows[0] as { id: string; name: string };
         const profile = { id: row.id, name: row.name || "Support" };
-        logger.info("Setting admin mentor profile from RPC", profile);
+        logger.debug("Setting admin mentor profile from RPC", profile);
         setAdminMentorProfile(profile);
         return profile;
       }
@@ -278,12 +278,12 @@ export const ConversationsList = ({ userId }: { userId: string }) => {
         .select("role")
         .eq("user_id", userId);
       const isAdmin = (myRoles ?? []).some((r) => r.role === "admin");
-      logger.info("Current user admin check", { isAdmin, myRoles });
+      logger.debug("Current user admin check", { isAdmin, myRoles });
       
       if (isAdmin) {
         const profile = await createAdminMentorProfile(userId);
         if (profile) {
-          logger.info("Created new admin mentor profile", profile);
+          logger.debug("Created new admin mentor profile", profile);
           setAdminMentorProfile(profile);
           return profile;
         }
@@ -335,7 +335,7 @@ export const ConversationsList = ({ userId }: { userId: string }) => {
       return;
     }
 
-    logger.info("Conversation created", { conversationId: created.id, targetUserId, mentorId, mentorName });
+    logger.debug("Conversation created", { conversationId: created.id, targetUserId, mentorId, mentorName });
     navigate(`${messagesBasePath}/${created.id}`);
   };
 
@@ -350,7 +350,7 @@ export const ConversationsList = ({ userId }: { userId: string }) => {
       });
       return;
     }
-    logger.info("startConversationWithAdmin", { userId, adminProfile });
+    logger.debug("startConversationWithAdmin", { userId, adminProfile });
     await openOrCreateConversation(userId, adminProfile.id, adminProfile.name);
   };
 
@@ -399,7 +399,7 @@ export const ConversationsList = ({ userId }: { userId: string }) => {
         return;
       }
       
-      logger.info("Admin conversation created and claimed", { conversationId: newConv.id, claimedBy: userId });
+      logger.debug("Admin conversation created and claimed", { conversationId: newConv.id, claimedBy: userId });
       navigate(`${messagesBasePath}/${newConv.id}`);
     } else {
       // Check existing first
@@ -433,7 +433,7 @@ export const ConversationsList = ({ userId }: { userId: string }) => {
         return;
       }
       
-      logger.info("Admin conversation created and claimed", { conversationId: newConv.id, claimedBy: userId });
+      logger.debug("Admin conversation created and claimed", { conversationId: newConv.id, claimedBy: userId });
       navigate(`${messagesBasePath}/${newConv.id}`);
     }
   };

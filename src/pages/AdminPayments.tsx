@@ -40,7 +40,7 @@ interface ProductPurchase {
   created_at: string;
 }
 
-const BOOKING_STATUSES = ["pending", "confirmed", "cancelled", "completed"];
+const BOOKING_STATUSES = ["pending", "confirmed", "cancelled", "completed", "failed", "refunded"];
 const PURCHASE_STATUSES = ["pending", "completed", "refunded", "failed"];
 
 export default function AdminPayments() {

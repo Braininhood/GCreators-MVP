@@ -23,7 +23,8 @@ tests/
 test-results/
 screenshots-archive/
 
-# Sensitive files
+# Sensitive files / local scripts
+fix_sql.py
 .env
 .env.local
 .env.*.local

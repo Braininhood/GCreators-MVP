@@ -48,14 +48,16 @@ export const AvatarChatInterface = ({ avatarId, mentorId, mentorName, onBookingC
     const { data: { user } } = await supabase.auth.getUser();
     setCurrentUser(user);
     if (user) {
-      const { data: roleData } = await supabase
+      const { data: rolesData } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      setUserRole(roleData?.role ?? "learner");
-      // Only initialize conversation for non-mentors
-      if (roleData?.role !== "mentor" && roleData?.role !== "admin") {
+        .eq("user_id", user.id);
+      const roles = (rolesData ?? []).map((r) => r.role);
+      const isAdmin = roles.includes("admin");
+      const isMentor = roles.includes("mentor");
+      setUserRole(isAdmin ? "admin" : isMentor ? "mentor" : "learner");
+      // Learners and admins can chat; mentors (who are not admin) cannot
+      if (!isMentor || isAdmin) {
         initializeConversation(user.id);
       }
     }
@@ -282,8 +284,8 @@ export const AvatarChatInterface = ({ avatarId, mentorId, mentorName, onBookingC
     );
   }
 
-  // Mentor role — cannot chat with avatars, show question form prompt
-  if (authChecked && (userRole === "mentor" || userRole === "admin")) {
+  // Mentor role (and not admin) — cannot chat; admins can test any avatar
+  if (authChecked && userRole === "mentor") {
     return (
       <Card className="flex flex-col h-[300px] items-center justify-center text-center p-8">
         <Bot className="h-12 w-12 text-muted-foreground mb-4" />
@@ -291,6 +293,9 @@ export const AvatarChatInterface = ({ avatarId, mentorId, mentorName, onBookingC
         <p className="text-sm text-muted-foreground mb-4 max-w-xs">
           As a mentor, you can view and manage this avatar from your dashboard.
         </p>
+        <Button variant="outline" onClick={() => navigate("/mentor/dashboard?tab=avatars")}>
+          Go to Dashboard
+        </Button>
       </Card>
     );
   }

@@ -67,17 +67,16 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold mb-4">Legal</h4>
             <ul className="space-y-2 text-sm opacity-80">
-              <li><a href="#" className="hover:text-accent transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="hover:text-accent transition-colors">Terms of Service</a></li>
-              <li><a href="#" className="hover:text-accent transition-colors">Cookie Policy</a></li>
-              <li><a href="#" className="hover:text-accent transition-colors">GDPR</a></li>
+              <li><Link to="/privacy-policy" className="hover:text-accent transition-colors">Privacy Policy</Link></li>
+              <li><Link to="/terms-of-service" className="hover:text-accent transition-colors">Terms of Service</Link></li>
+              <li><Link to="/cookie-policy" className="hover:text-accent transition-colors">Cookie Policy</Link></li>
             </ul>
           </div>
         </div>
 
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-primary-foreground/10 text-center text-sm opacity-80">
-          <p>© 2024 G.Creators. All rights reserved. Founded by Vita Shafinska</p>
+          <p>© 2026 G.Creators. All rights reserved. Founded by Vita Shafinska</p>
         </div>
       </div>
     </footer>

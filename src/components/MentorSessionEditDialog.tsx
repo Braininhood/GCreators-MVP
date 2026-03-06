@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle } from "lucide-react";
 
 export interface MentorBooking {
   id: string;
@@ -91,6 +91,7 @@ interface MentorSessionEditDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSaved: () => void;
+  onMarkCompleted?: () => void;
 }
 
 export function MentorSessionEditDialog({
@@ -98,8 +99,10 @@ export function MentorSessionEditDialog({
   open,
   onOpenChange,
   onSaved,
+  onMarkCompleted,
 }: MentorSessionEditDialogProps) {
   const [meetingLink, setMeetingLink] = useState("");
+  const [markingCompleted, setMarkingCompleted] = useState(false);
   const [meetingPlatform, setMeetingPlatform] = useState("");
   const [notes, setNotes] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
@@ -348,11 +351,47 @@ export function MentorSessionEditDialog({
               </p>
             )}
           </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button onClick={handleSave} disabled={saving}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
-            </Button>
+          <div className="flex justify-between gap-2 pt-2">
+            <div>
+              {onMarkCompleted && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={async () => {
+                    if (!booking) return;
+                    setMarkingCompleted(true);
+                    try {
+                      const { data, error } = await supabase.functions.invoke("update-booking-status", {
+                        body: { bookingId: booking.id, status: "completed" },
+                      });
+                      if (error) throw error;
+                      if (data?.error) throw new Error(data.error);
+                      toast({ title: "Session marked as completed" });
+                      onOpenChange(false);
+                      onMarkCompleted();
+                    } catch (e: unknown) {
+                      toast({
+                        title: "Error",
+                        description: e instanceof Error ? e.message : "Failed to update",
+                        variant: "destructive",
+                      });
+                    } finally {
+                      setMarkingCompleted(false);
+                    }
+                  }}
+                  disabled={markingCompleted || saving}
+                >
+                  {markingCompleted ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
+                  <span className="ml-2">Mark Completed</span>
+                </Button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+              <Button onClick={handleSave} disabled={saving}>
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>

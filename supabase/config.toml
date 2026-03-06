@@ -76,6 +76,13 @@ verify_jwt = false
 [functions.extract-file-content]
 verify_jwt = false
 
+# Auth validated inside via Authorization header
+[functions.cancel-booking]
+verify_jwt = false
+
+[functions.update-booking-status]
+verify_jwt = false
+
 # Admin deletes users – auth and admin role validated inside function
 [functions.admin-delete-user]
 verify_jwt = false

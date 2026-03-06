@@ -258,6 +258,8 @@ export default function AdminBookings() {
                         <SelectItem value="confirmed">Confirmed</SelectItem>
                         <SelectItem value="cancelled">Cancelled</SelectItem>
                         <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="failed">Failed</SelectItem>
+                        <SelectItem value="refunded">Refunded</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -334,7 +336,11 @@ export default function AdminBookings() {
                     <TableCell>{b.mentor_name}</TableCell>
                     <TableCell>{b.user_email}</TableCell>
                     <TableCell>
-                      <Badge variant={b.status === "confirmed" ? "default" : b.status === "cancelled" ? "destructive" : "secondary"}>
+                      <Badge variant={
+                        b.status === "confirmed" ? "default" :
+                        b.status === "completed" ? "secondary" :
+                        b.status === "cancelled" || b.status === "failed" || b.status === "refunded" ? "destructive" : "secondary"
+                      }>
                         {b.status}
                       </Badge>
                     </TableCell>

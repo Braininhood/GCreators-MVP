@@ -22,6 +22,9 @@ import Profile from "./pages/Profile";
 import AvatarChat from "./pages/AvatarChat";
 import MentorShop from "./pages/MentorShop";
 import PurchaseSuccess from "./pages/PurchaseSuccess";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import CookiePolicy from "./pages/CookiePolicy";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +58,10 @@ const App = () => (
             {/* Mentor routes */}
             <Route path="/mentor/dashboard" element={<MentorCabinet />} />
             <Route path="/mentor/questions" element={<MentorQuestions />} />
+            {/* Legal */}
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
+            <Route path="/cookie-policy" element={<CookiePolicy />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

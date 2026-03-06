@@ -35,7 +35,7 @@ const MentorQuestions = () => {
   const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>({});
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { isAdmin, loading: roleLoading } = useUserRole();
+  const { isAdmin, isMentor, loading: roleLoading } = useUserRole();
 
   // Admins can access mentor questions if they also have mentor role
   useEffect(() => {
@@ -179,7 +179,7 @@ const MentorQuestions = () => {
                       <div className="flex items-start justify-between">
                         <div>
                           <CardTitle className="text-lg">
-                            {userProfiles[question.user_id]?.full_name || "Anonymous"}
+                            {userProfiles[question.user_id]?.full_name?.trim() || "Learner"}
                           </CardTitle>
                           <CardDescription>
                             {formatDistanceToNow(new Date(question.created_at), { addSuffix: true })}
@@ -216,7 +216,7 @@ const MentorQuestions = () => {
                     <div className="flex items-start justify-between">
                       <div>
                         <CardTitle className="text-lg">
-                          {userProfiles[question.user_id]?.full_name || "Anonymous"}
+                          {userProfiles[question.user_id]?.full_name?.trim() || "Learner"}
                         </CardTitle>
                         <CardDescription>
                           {formatDistanceToNow(new Date(question.created_at), { addSuffix: true })}

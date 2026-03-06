@@ -141,7 +141,7 @@ export const MentorQuestionsTab = ({ mentorId }: MentorQuestionsTabProps) => {
                     <div className="flex items-start justify-between">
                       <div>
                         <CardTitle className="text-lg">
-                          {userProfiles[question.user_id]?.full_name || "Anonymous"}
+                          {userProfiles[question.user_id]?.full_name?.trim() || "Learner"}
                         </CardTitle>
                         <CardDescription>
                           {formatDistanceToNow(new Date(question.created_at), { addSuffix: true })}
@@ -178,7 +178,7 @@ export const MentorQuestionsTab = ({ mentorId }: MentorQuestionsTabProps) => {
                   <div className="flex items-start justify-between">
                     <div>
                       <CardTitle className="text-lg">
-                        {userProfiles[question.user_id]?.full_name || "Anonymous"}
+                        {userProfiles[question.user_id]?.full_name?.trim() || "Learner"}
                       </CardTitle>
                       <CardDescription>
                         {formatDistanceToNow(new Date(question.created_at), { addSuffix: true })}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar as CalendarIcon, Clock, User, AlertCircle, Download, Mail, DollarSign } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, User, AlertCircle, Download, Mail, DollarSign, XCircle, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -46,6 +46,7 @@ export const BookingCalendarView = ({ userId, userType }: BookingCalendarProps) 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedBooking, setSelectedBooking] = useState<BookingDetails | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -234,6 +235,52 @@ END:VCALENDAR`;
       title: "Calendar file downloaded",
       description: "Open the file to add this session to your calendar",
     });
+  };
+
+    const handleCancelBooking = async () => {
+    if (!selectedBooking) return;
+    setActionLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("cancel-booking", {
+        body: { bookingId: selectedBooking.id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({ title: "Session cancelled", description: "The booking has been cancelled." });
+      setDialogOpen(false);
+      loadBookings();
+    } catch (e: unknown) {
+      toast({
+        title: "Error",
+        description: e instanceof Error ? e.message : "Failed to cancel booking",
+        variant: "destructive",
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleMarkCompleted = async () => {
+    if (!selectedBooking) return;
+    setActionLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("update-booking-status", {
+        body: { bookingId: selectedBooking.id, status: "completed" },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({ title: "Session marked as completed" });
+      setDialogOpen(false);
+      loadBookings();
+    } catch (e: unknown) {
+      toast({
+        title: "Error",
+        description: e instanceof Error ? e.message : "Failed to update status",
+        variant: "destructive",
+      });
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const addToGoogleCalendar = (booking: BookingDetails) => {
@@ -488,6 +535,32 @@ END:VCALENDAR`;
                   <Download className="h-4 w-4 mr-2" />
                   Download ICS File
                 </Button>
+
+                {/* Cancel & Mark completed (role-based) */}
+                <div className="flex gap-2 pt-2 border-t">
+                  <Button
+                    onClick={handleCancelBooking}
+                    variant="outline"
+                    className="flex-1"
+                    size="lg"
+                    disabled={actionLoading}
+                  >
+                    <XCircle className="h-4 w-4 mr-2" />
+                    Cancel Session
+                  </Button>
+                  {userType === "mentor" && (
+                    <Button
+                      onClick={handleMarkCompleted}
+                      variant="default"
+                      className="flex-1"
+                      size="lg"
+                      disabled={actionLoading}
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Mark Completed
+                    </Button>
+                  )}
+                </div>
               </div>
 
               <p className="text-xs text-center text-muted-foreground px-2">

@@ -32,6 +32,7 @@ serve(async (req) => {
 
     let reminders24h = 0;
     let reminders1h = 0;
+    let autoCompleted = 0;
 
     // Find bookings for 24h reminders (between 24h and 25h from now)
     const { data: bookings24h, error: error24h } = await supabase
@@ -163,14 +164,41 @@ serve(async (req) => {
       }
     }
 
-    console.log(`[SEND-REMINDERS] Completed. Sent ${reminders24h} 24h reminders and ${reminders1h} 1h reminders`);
+    // Auto-complete past sessions: mark confirmed bookings as completed when session time has passed
+    const todayStr = now.toISOString().split("T")[0];
+    const { data: pastBookings } = await supabase
+      .from("bookings")
+      .select("id, booking_date, booking_time")
+      .eq("status", "confirmed")
+      .lte("booking_date", todayStr);
+
+    if (pastBookings && pastBookings.length > 0) {
+      for (const b of pastBookings) {
+        const [h = 0, m = 0] = (b.booking_time || "00:00").toString().split(":").map(Number);
+        const sessionEnd = new Date(`${b.booking_date}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00`);
+        sessionEnd.setHours(sessionEnd.getHours() + 1); // 60 min session
+        if (now > sessionEnd) {
+          const { error: updErr } = await supabase
+            .from("bookings")
+            .update({ status: "completed" })
+            .eq("id", b.id);
+          if (!updErr) {
+            autoCompleted++;
+            console.log(`[SEND-REMINDERS] Auto-completed booking ${b.id}`);
+          }
+        }
+      }
+    }
+
+    console.log(`[SEND-REMINDERS] Completed. Sent ${reminders24h} 24h, ${reminders1h} 1h reminders; auto-completed ${autoCompleted} past sessions`);
 
     return new Response(
       JSON.stringify({
         success: true,
         reminders24h,
         reminders1h,
-        message: `Sent ${reminders24h} 24h reminders and ${reminders1h} 1h reminders`,
+        autoCompleted,
+        message: `Sent ${reminders24h} 24h and ${reminders1h} 1h reminders; auto-completed ${autoCompleted} sessions`,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
