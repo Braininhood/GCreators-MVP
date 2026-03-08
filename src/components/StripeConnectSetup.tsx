@@ -34,6 +34,33 @@ interface ConnectStatus {
 
 const CONNECT_UNAVAILABLE_KEY = "gcreators_connect_unavailable";
 
+// Human-readable labels for Stripe requirement field names
+const REQUIREMENT_LABELS: Record<string, string> = {
+  "business.profile.mcc": "Business category (Merchant Category Code)",
+  "business.profile.url": "Business website",
+  "external_account": "Bank account details",
+  "individual.address.city": "City",
+  "individual.address.line1": "Address line 1",
+  "individual.address.line2": "Address line 2",
+  "individual.address.postal_code": "Postal / ZIP code",
+  "individual.address.state": "State / Province / Region",
+  "individual.dob.day": "Date of birth (day)",
+  "individual.dob.month": "Date of birth (month)",
+  "individual.dob.year": "Date of birth (year)",
+  "individual.email": "Email address",
+  "individual.first_name": "First name",
+  "individual.last_name": "Last name",
+  "individual.phone": "Phone number",
+  "individual.ssn_last_4": "Last 4 digits of SSN (US only)",
+  "individual.id_number": "ID number (if required)",
+  "settings.payments.statement_descriptor": "Statement descriptor (appears on bank statement)",
+  "tos_acceptance.date": "Terms of service acceptance",
+  "tos_acceptance.ip": "Terms of service acceptance",
+};
+
+const formatRequirement = (req: string): string =>
+  REQUIREMENT_LABELS[req] ?? req.replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
 // Stripe Connect Express supported countries (ISO 3166-1 alpha-2)
 const PAYOUT_COUNTRIES: { code: string; name: string }[] = [
   { code: "GB", name: "United Kingdom" },
@@ -280,6 +307,29 @@ export const StripeConnectSetup = ({ mentorId }: StripeConnectSetupProps) => {
     }
   };
 
+  const handleResetAccount = async () => {
+    setCreating(true);
+    try {
+      const headers = await getAuthHeaders();
+      const { error } = await supabase.functions.invoke("stripe-connect-reset", { headers });
+      if (error) throw new Error(error.message);
+      toast({
+        title: "Account reset",
+        description: "You can now set up payouts again. Choose your country before starting.",
+        variant: "default",
+      });
+      await checkConnectStatus();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to reset",
+        variant: "destructive",
+      });
+    } finally {
+      setCreating(false);
+    }
+  };
+
   const handleContinueOnboarding = async () => {
     setCreating(true);
     try {
@@ -420,13 +470,19 @@ export const StripeConnectSetup = ({ mentorId }: StripeConnectSetupProps) => {
           </Alert>
 
           {status?.requirements && status.requirements.currently_due?.length > 0 && (
-            <div className="p-4 bg-muted rounded-lg">
-              <p className="text-sm font-medium mb-2">Required Information:</p>
-              <ul className="text-sm text-muted-foreground space-y-1">
+            <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
+              <p className="text-sm font-semibold mb-3 text-foreground">Information needed to complete setup</p>
+              <ul className="grid gap-2 sm:grid-cols-2 text-sm text-muted-foreground">
                 {status.requirements.currently_due.map((req: string) => (
-                  <li key={req}>• {req.replace(/_/g, " ")}</li>
+                  <li key={req} className="flex items-start gap-2">
+                    <span className="text-amber-600 mt-0.5">•</span>
+                    <span>{formatRequirement(req)}</span>
+                  </li>
                 ))}
               </ul>
+              <p className="text-xs text-muted-foreground mt-3">
+                You will provide these when you continue to Stripe&apos;s secure form.
+              </p>
             </div>
           )}
 
@@ -448,6 +504,18 @@ export const StripeConnectSetup = ({ mentorId }: StripeConnectSetupProps) => {
               </>
             )}
           </Button>
+
+          <p className="text-center text-sm text-muted-foreground">
+            Wrong country? Stripe cannot change country after creation.{" "}
+            <button
+              type="button"
+              onClick={handleResetAccount}
+              disabled={creating}
+              className="underline hover:text-foreground font-medium"
+            >
+              Start over with different country
+            </button>
+          </p>
         </CardContent>
       </Card>
     );

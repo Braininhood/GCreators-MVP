@@ -45,6 +45,9 @@ verify_jwt = false
 [functions.stripe-connect-onboarding]
 verify_jwt = false
 
+[functions.stripe-connect-reset]
+verify_jwt = false
+
 # Google Calendar – auth validated inside function if needed
 [functions.google-calendar-auth]
 verify_jwt = false
