@@ -12,8 +12,11 @@ import {
   ExternalLink,
   CreditCard,
   DollarSign,
-  Clock
+  Clock,
+  Globe
 } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface StripeConnectSetupProps {
   mentorId: string;
@@ -31,9 +34,39 @@ interface ConnectStatus {
 
 const CONNECT_UNAVAILABLE_KEY = "gcreators_connect_unavailable";
 
+// Stripe Connect Express supported countries (ISO 3166-1 alpha-2)
+const PAYOUT_COUNTRIES: { code: string; name: string }[] = [
+  { code: "GB", name: "United Kingdom" },
+  { code: "US", name: "United States" },
+  { code: "IE", name: "Ireland" },
+  { code: "DE", name: "Germany" },
+  { code: "FR", name: "France" },
+  { code: "ES", name: "Spain" },
+  { code: "IT", name: "Italy" },
+  { code: "NL", name: "Netherlands" },
+  { code: "BE", name: "Belgium" },
+  { code: "AT", name: "Austria" },
+  { code: "CH", name: "Switzerland" },
+  { code: "PL", name: "Poland" },
+  { code: "SE", name: "Sweden" },
+  { code: "NO", name: "Norway" },
+  { code: "DK", name: "Denmark" },
+  { code: "FI", name: "Finland" },
+  { code: "PT", name: "Portugal" },
+  { code: "CA", name: "Canada" },
+  { code: "AU", name: "Australia" },
+  { code: "NZ", name: "New Zealand" },
+  { code: "JP", name: "Japan" },
+  { code: "SG", name: "Singapore" },
+  { code: "HK", name: "Hong Kong" },
+  { code: "MX", name: "Mexico" },
+  { code: "BR", name: "Brazil" },
+];
+
 export const StripeConnectSetup = ({ mentorId }: StripeConnectSetupProps) => {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState("GB");
   const [status, setStatus] = useState<ConnectStatus | null>(null);
   const [platformConnectUnavailable, setPlatformConnectUnavailable] = useState(() =>
     typeof sessionStorage !== "undefined" ? sessionStorage.getItem(CONNECT_UNAVAILABLE_KEY) === "1" : false
@@ -166,10 +199,10 @@ export const StripeConnectSetup = ({ mentorId }: StripeConnectSetupProps) => {
     try {
       const headers = await getAuthHeaders();
 
-      // Step 1: Create Stripe Connect account
+      // Step 1: Create Stripe Connect account (with user's country choice)
       const { data: accountData, error: accountError } = await supabase.functions.invoke(
         "create-stripe-connect-account",
-        { headers }
+        { headers, body: { country: selectedCountry } }
       );
 
 
@@ -485,6 +518,28 @@ export const StripeConnectSetup = ({ mentorId }: StripeConnectSetupProps) => {
             Stripe will collect and verify your bank details; this one-time setup takes about 5 minutes. For security, bank account changes after setup can only be made with support.
           </AlertDescription>
         </Alert>
+
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2">
+            <Globe className="h-4 w-4" />
+            Payout country
+          </Label>
+          <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select your country" />
+            </SelectTrigger>
+            <SelectContent>
+              {PAYOUT_COUNTRIES.map((c) => (
+                <SelectItem key={c.code} value={c.code}>
+                  {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Stripe will show the correct forms (bank, tax, etc.) for your country
+          </p>
+        </div>
 
         <div className="space-y-3">
           <div className="flex items-start gap-3">

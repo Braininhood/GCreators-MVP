@@ -27,6 +27,7 @@ screenshots-archive/
 fix_sql.py
 .env
 .env.local
+.env.production
 .env.*.local
 auth-cookies.json
 Untitled

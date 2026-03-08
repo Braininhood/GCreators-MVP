@@ -76,15 +76,28 @@ serve(async (req) => {
       );
     }
 
+    // Country from request body (user choice) or env fallback
+    let body: { country?: string } = {};
+    try {
+      body = (await req.json()) || {};
+    } catch {
+      // no body
+    }
+    const country =
+      (body.country && /^[A-Z]{2}$/.test(body.country) ? body.country : null) ||
+      Deno.env.get("STRIPE_CONNECT_COUNTRY") ||
+      "GB";
+
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2023-10-16",
       httpClient: Stripe.createFetchHttpClient(),
     });
 
     // Create Stripe Connect account (metadata values must be strings)
+    // Stripe shows country-specific payout fields (bank, tax, etc.) in onboarding
     const account = await stripe.accounts.create({
       type: "express",
-      country: "US",
+      country,
       email: user.email ?? undefined,
       capabilities: {
         card_payments: { requested: true },
