@@ -15,15 +15,16 @@ const Navbar = () => {
   const location = useLocation();
   const { unreadCount } = useUnreadMessages(user);
   const { isAdmin, isMentor, isLearner } = useUserRole();
+  const canSwitchDashboards = isMentor && isLearner;
   const isOnLearnerDashboard = location.pathname.startsWith("/learner");
-  const isOnMentorDashboard = location.pathname.startsWith("/mentor");
+  const isOnMentorDashboard = location.pathname.startsWith("/mentor/");
   const dashboardBase = user && isAdmin ? "/admin" : user && isMentor ? "/mentor/dashboard" : "/learner/dashboard";
   const messagesPath = user && isAdmin
     ? "/admin/messages"
     : user && isMentor
       ? "/mentor/dashboard?tab=messages"
       : "/learner/dashboard?tab=messages";
-  const isDashboard = location.pathname.startsWith("/mentor") || location.pathname.startsWith("/learner") || location.pathname.startsWith("/admin");
+  const isDashboard = location.pathname.startsWith("/mentor/") || location.pathname.startsWith("/learner") || location.pathname.startsWith("/admin");
 
   const goToDashboard = () => {
     // Always navigate to base dashboard path (no tab param) to land on overview
@@ -112,7 +113,7 @@ const Navbar = () => {
                     Find Mentor
                   </Button>
                 )}
-                {isOnLearnerDashboard && isMentor && (
+                {isOnLearnerDashboard && canSwitchDashboards && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -125,7 +126,7 @@ const Navbar = () => {
                     Switch to Mentor
                   </Button>
                 )}
-                {isOnMentorDashboard && isLearner && (
+                {isOnMentorDashboard && canSwitchDashboards && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -237,13 +238,13 @@ const Navbar = () => {
                       Find Mentor
                     </Button>
                   )}
-                  {isOnLearnerDashboard && isMentor && (
+                  {isOnLearnerDashboard && canSwitchDashboards && (
                     <Button variant="outline" className="w-full" onClick={() => { setIsOpen(false); localStorage.setItem("gcreators_dashboard_view", "mentor"); navigate("/mentor/dashboard", { replace: true }); }}>
                       <ArrowLeftRight className="h-4 w-4 mr-2" />
                       Switch to Mentor
                     </Button>
                   )}
-                  {isOnMentorDashboard && isLearner && (
+                  {isOnMentorDashboard && canSwitchDashboards && (
                     <Button variant="outline" className="w-full" onClick={() => { setIsOpen(false); localStorage.setItem("gcreators_dashboard_view", "learner"); navigate("/learner/dashboard", { replace: true }); }}>
                       <ArrowLeftRight className="h-4 w-4 mr-2" />
                       Switch to Learner
