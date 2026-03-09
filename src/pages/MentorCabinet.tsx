@@ -26,7 +26,7 @@ import { MentorQuestionsTab } from "@/components/MentorQuestionsTab";
 import { StripeConnectSetup } from "@/components/StripeConnectSetup";
 import { PayoutDashboard } from "@/components/PayoutDashboard";
 import { User } from "@supabase/supabase-js";
-import { Settings, ShoppingBag, Receipt, LayoutDashboard, User as UserIcon, Bot, CalendarClock, HelpCircle, CalendarDays, MessageSquare, Wallet, ArrowLeftRight } from "lucide-react";
+import { Settings, ShoppingBag, Receipt, LayoutDashboard, User as UserIcon, Bot, CalendarClock, HelpCircle, CalendarDays, MessageSquare, Wallet } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { Badge } from "@/components/ui/badge";
@@ -82,7 +82,7 @@ const MentorCabinet = () => {
   const [activeTab, setActiveTab] = useState(tabFromUrl);
   const [editingSession, setEditingSession] = useState<MentorBooking | null>(null);
   const { toast } = useToast();
-  const { isMentor, isLearner, isAdmin, loading: roleLoading } = useUserRole();
+  const { isMentor, isAdmin, loading: roleLoading } = useUserRole();
   const { unreadCount } = useUnreadMessages(user);
 
   useEffect(() => {
@@ -330,22 +330,6 @@ const MentorCabinet = () => {
               Welcome back, {mentorProfile?.name || user?.email}
             </p>
           </div>
-          {isLearner && (
-            <div className="flex items-center gap-2 self-start sm:self-auto">
-              <Button
-                variant="outline"
-                size="sm"
-                className="shrink-0"
-                onClick={() => {
-                  localStorage.setItem("gcreators_dashboard_view", "learner");
-                  navigate("/learner/dashboard", { replace: true });
-                }}
-              >
-                <ArrowLeftRight className="mr-2 h-4 w-4" />
-                Switch to Learner
-              </Button>
-            </div>
-          )}
         </div>
 
         {mentorProfile && (
