@@ -237,12 +237,14 @@ const MentorProfile = () => {
       }
     }
 
-    // Fetch avatar if available
+    // Fetch avatar if available (take most recent if multiple)
     const { data: avatarData } = await supabase
       .from('mentor_avatars')
       .select('*')
       .eq('mentor_id', id)
       .eq('status', 'ready')
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (avatarData) {
